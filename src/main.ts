@@ -1,5 +1,6 @@
 import './style.css'
 import { OmdbApi } from "./service/OmdbApi.ts";
+import FetchHttpClient from "./service/FetchHttpClient.ts";
 import { Table, createRows, AddEventOnClick } from "./components/Table.ts"
 import { Modal, setContentModal, initEvents, toggleModal } from "./components/Modal.ts"
 import { Search,initEvent } from "./components/Search.ts"
@@ -15,7 +16,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     ${Modal()}
 `
 
-const instance = new OmdbApi()
+const httpClient = new FetchHttpClient()
+const instance = new OmdbApi(httpClient, 'token')
 let _movies : IMovie[] = []
 let _movieSelected: IMovie | null = null
 
@@ -39,3 +41,4 @@ initEvents()
 initEvent(async (title:string) : Promise<void> => {
     setMovies(await instance.findMoviesByName(title))
 })
+

@@ -1,21 +1,21 @@
 import MovieDTO from "../shared/DTO/MovieDTO.ts";
-import {IMovieOmdb, IResultOmdb, IMovie} from "../shared/Interface";
+import { IMovieOmdb, IResultOmdb, IMovie, IHttp } from "../shared/Interface";
 
 export class OmdbApi {
-    private url: string = `http://www.omdbapi.com/?apikey=${'token'}`
+    private readonly url: string;
+    constructor(private http: IHttp, apiKey: string) {
+        this.url = `http://www.omdbapi.com/?apikey=${apiKey}`;
+    }
 
     async findMoviesByName(name: string): Promise<IMovie[]> {
-        const response = await fetch(`${this.url}&s=${name}`)
-        const ResultOmDb: IResultOmdb = await response.json()
-        const PromisesOmdb: Promise<IMovieOmdb>[] =   ResultOmDb
-            .Search
-            .map(movieOmbd => this.findMovieId(movieOmbd))
-        const moviesOmdb: IMovieOmdb[] = await Promise.all(PromisesOmdb)
-        return MovieDTO.DtoToClass(moviesOmdb)
+        const resultOmDb = await this.http.get<IResultOmdb>(`${this.url}&s=${name}`);
+        const promises = resultOmDb.Search.map((movieOmbd) => this.findMovieId(movieOmbd));
+        const moviesOmdb = await Promise.all(promises);
+        return MovieDTO.DtoToClass(moviesOmdb);
     }
 
-    async findMovieId(movieOmdb:  IMovieOmdb): Promise<IMovieOmdb> {
-        const response = await fetch(`${this.url}&i=${movieOmdb.imdbID}`)
-        return await response.json()
+    async findMovieId(movieOmdb: IMovieOmdb): Promise<IMovieOmdb> {
+        return this.http.get<IMovieOmdb>(`${this.url}&i=${movieOmdb.imdbID}`);
     }
 }
+
